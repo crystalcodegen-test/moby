@@ -1,0 +1,7 @@
+git
+php5
+php5-curl
+php5-gd
+php5-mysql
+redis-server
+zlib1g-dev

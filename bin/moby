@@ -1,0 +1,74 @@
+#!/bin/sh
+
+#
+# moby
+#
+# @author Chris Tate <chris@studiotate.com>
+#
+
+# validate image
+case $2 in
+  db)  IMAGE=db ;;
+  web) IMAGE=web ;;
+  *)   echo "Unknown image." ; exit ;;
+esac
+
+# validate command
+case $1 in
+  reset)
+    echo "Stopping $IMAGE..."
+    docker stop moby-$IMAGE
+
+    echo "Removing $IMAGE..."
+    docker rm moby-$IMAGE
+
+    echo "Removing $IMAGE image..."
+    docker rmi moby-$IMAGE-image
+    ;;
+
+  rm)
+    echo "Stopping $IMAGE..."
+    docker stop moby-$IMAGE
+
+    echo "Removing $IMAGE..."
+    docker rm moby-$IMAGE
+    ;;
+
+  start)
+    echo "Starting $IMAGE..."
+
+    echo "Rebuilding $IMAGE..."
+    docker stop moby-$IMAGE
+    docker rm moby-$IMAGE
+    docker build -t moby-$IMAGE-image ../src/$IMAGE
+
+    echo "Running $IMAGE..."
+    case $IMAGE in
+      db)
+        docker run --name moby-db \
+          -p 3306:3306 \
+          -v /Developer/Moby/Moby-Data:/var/lib/mysql \
+          -it moby-db-image bash
+        ;;
+      web)
+        docker run \
+          --name moby-web \
+          --link moby-db:db.moby \
+          -p 80:80 \
+          -v /Developer/Moby:/var/git \
+          -it moby-web-image bash
+        ;;
+    esac
+    ;;
+
+  stop)
+    echo "Stopping $IMAGE..."
+    docker stop moby-$IMAGE
+
+    echo "Removing $IMAGE..."
+    docker rm moby-$IMAGE
+    ;;
+
+  *) echo "Unknown command." ; exit ;;
+
+esac
